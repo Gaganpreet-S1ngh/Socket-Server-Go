@@ -19,7 +19,7 @@ type Hub interface {
 	Register(c Client)
 	Unregister(c Client)
 	Subscribe(c Client, topic string)
-	Unubscribe(c Client, topic string)
+	Unsubscribe(c Client, topic string)
 	Publish(topic string, message []byte) int
 	PublishToUser(userID string, message []byte) int
 	Stats() (int, int)
@@ -27,13 +27,13 @@ type Hub interface {
 
 type hub struct {
 	mu        sync.RWMutex
-	logger     *zap.Logger   
+	logger    *zap.Logger
 	topics    map[string]map[string]Client   // Topic -> set of Client IDS subscribed to it (string - map)
 	clients   map[string]Client              // ClientID -> Client for direct lookups (string - interface)
-	userConns map[string]map[string]struct{} // userID -> set of client IDS (string - array) , for eg a user with 2 tabs open 
+	userConns map[string]map[string]struct{} // userID -> set of client IDS (string - array) , for eg a user with 2 tabs open
 }
 
-func newHub(logger *zap.Logger) Hub {
+func NewHub(logger *zap.Logger) Hub {
 	return &hub{
 		topics:    make(map[string]map[string]Client),
 		clients:   make(map[string]Client),
@@ -51,18 +51,18 @@ func (h *hub) Publish(topic string, message []byte) int {
 
 	// Copy all the subscribers under read lock then release it for safe concurrency
 
-	targets := make([]Client , 0 , len(subs))
+	targets := make([]Client, 0, len(subs))
 
-	for _ , c := range subs {
+	for _, c := range subs {
 		targets = append(targets, c)
 	}
 
 	h.mu.RUnlock()
 	sent := 0
 
-	// Send message to everyone 
-	for _ , c := range targets {
-		if c.Send(message){
+	// Send message to everyone
+	for _, c := range targets {
+		if c.Send(message) {
 			sent++
 		}
 	}
@@ -76,10 +76,10 @@ func (h *hub) PublishToUser(userID string, message []byte) int {
 
 	h.mu.RLock()
 	connIDS := h.userConns[userID]
-	targets := make([]Client , 0 , len(connIDS))
+	targets := make([]Client, 0, len(connIDS))
 
 	for id := range connIDS {
-		if c , ok := h.clients[id]; ok {
+		if c, ok := h.clients[id]; ok {
 			targets = append(targets, c)
 		}
 	}
@@ -88,9 +88,9 @@ func (h *hub) PublishToUser(userID string, message []byte) int {
 
 	sent := 0
 
-	// Send message to everyone 
-	for _ ,c := range targets {
-		if c.Send(message){
+	// Send message to everyone
+	for _, c := range targets {
+		if c.Send(message) {
 			sent++
 		}
 	}
@@ -101,7 +101,7 @@ func (h *hub) PublishToUser(userID string, message []byte) int {
 
 // Stats implements [Hub].
 func (h *hub) Stats() (int, int) {
-		h.mu.RLock()
+	h.mu.RLock()
 	defer h.mu.RUnlock()
 	return len(h.clients), len(h.topics)
 }
@@ -124,32 +124,32 @@ func (h *hub) Unregister(c Client) {
 	defer h.mu.Unlock()
 
 	// Remove the client from clients
-	delete(h.clients , c.ID())
+	delete(h.clients, c.ID())
 
 	userID := c.UserID()
 	// remove that client from users map and if the users map becomes empty for that key then delete the user from the map
-	if conns , ok := h.userConns[userID]; ok {
-		delete(conns , c.ID())
+	if conns, ok := h.userConns[userID]; ok {
+		delete(conns, c.ID())
 		if len(conns) == 0 {
-			delete(h.userConns , userID)
+			delete(h.userConns, userID)
 		}
 	}
 
 	// remove the client from the topic and if no one for the topic remove the topic
-	for topic , subs := range h.topics {
-		if _ , ok := subs[c.ID()] ; ok {
-			delete(subs , c.ID())
+	for topic, subs := range h.topics {
+		if _, ok := subs[c.ID()]; ok {
+			delete(subs, c.ID())
 			if len(subs) == 0 {
-				delete(h.topics , topic)
+				delete(h.topics, topic)
 			}
 		}
 	}
 
-	h.logger.Info("Client Unregistered" , zap.String("Client_ID" , c.ID()) , zap.String("User_ID" , userID))
+	h.logger.Info("Client Unregistered", zap.String("Client_ID", c.ID()), zap.String("User_ID", userID))
 }
 
 // Unubscribe implements [Hub].
-func (h *hub) Unubscribe(c Client, topic string) {
+func (h *hub) Unsubscribe(c Client, topic string) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
@@ -161,15 +161,14 @@ func (h *hub) Unubscribe(c Client, topic string) {
 	}
 }
 
-
 // Register implements [Hub].
 func (h *hub) Register(c Client) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
-	
+
 	// first add the client
 	h.clients[c.ID()] = c
-	
+
 	// get the userID from the client
 	userID := c.UserID()
 
@@ -180,6 +179,6 @@ func (h *hub) Register(c Client) {
 
 	h.userConns[userID][c.ID()] = struct{}{} // simply every user id is assigned an array of client ids for multiple tabs
 
-	h.logger.Info("Client Registered" , zap.String("Client_ID" , c.ID()) , zap.String("User_ID" , userID))
+	h.logger.Info("Client Registered", zap.String("Client_ID", c.ID()), zap.String("User_ID", userID))
 
 }
