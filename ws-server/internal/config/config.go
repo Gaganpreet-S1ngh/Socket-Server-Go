@@ -11,6 +11,7 @@ import (
 type Config struct {
 	Port           string
 	CookieSecret   string
+	InternalKey    string
 	JWTSecret      string
 	JWTIssuer      string
 	AllowedOrigins []string
@@ -32,6 +33,7 @@ func LoadConfig() *Config {
 	return &Config{
 		Port:           os.Getenv("PORT"),
 		JWTSecret:      os.Getenv("JWT_SECRET"),
+		InternalKey:    os.Getenv("INTERNAL_KEY"),
 		CookieSecret:   os.Getenv("COOKIE_SECRET"),
 		JWTIssuer:      os.Getenv("JWT_ISSUER"),
 		AllowedOrigins: getList("WS_ALLOWED_ORIGINS", []string{}),
