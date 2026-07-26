@@ -1,0 +1,86 @@
+# =========================
+# OS / Editor
+# =========================
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+
+# =========================
+# ENV FILES (IMPORTANT)
+# =========================
+.env
+.env.*
+!.env.example
+
+# =========================
+# LOGS
+# =========================
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# =========================
+# FRONTEND (Next.js)
+# =========================
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/build/
+frontend/.turbo/
+frontend/.vercel/
+frontend/.next/cache/
+
+# Next.js misc
+frontend/next-env.d.ts
+
+# =========================
+# BACKEND (Go)
+# =========================
+backend/streaming_service/bin/
+backend/streaming_service/tmp/
+backend/streaming_service/vendor/
+
+backend/streaming_service/**/*.exe
+backend/streaming_service/**/*.out
+backend/streaming_service/**/main
+
+# Go build artifacts
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Go workspace
+go.work
+go.work.sum
+
+# =========================
+# COVERAGE / TEST
+# =========================
+coverage/
+*.coverprofile
+
+# =========================
+# DOCKER
+# =========================
+docker-compose.override.yml
+db-data/
+
+# =========================
+# NGINX (optional)
+# =========================
+nginx/logs/
+nginx/*.log
+
+# =========================
+# CACHE
+# =========================
+.cache/
+tmp/
